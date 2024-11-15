@@ -1,0 +1,28 @@
+﻿topic,topic_name,top_15_words,mean_word_weight,include
+1,Education,"student, school, moe, education, learn, teacher, programme, skill, university, train, primary, course, parent, graduate, polytechnic",0.57,TRUE
+2,Religion,"hawker, food, muis, centre, stall, madrasah, vote, muslim, nea, clean, stallholders, mosque, coffee, asatizah, religious",0.56,FALSE
+3,Urban Planning,"smoke, fire, hdb, nea, litter, neighbour, scdf, resident, tobacco, build, highrise, camera, noise, smoker, secondhand",0.57,TRUE
+4,Public Health,"patient, medical, healthcare, medisave, medishield, premium, insurance, treatment, doctor, subsidy, life, insurer, coverage, moh, pr",0.48,TRUE
+5,Communications and Technology,"scam, digital, bank, cyber, cybersecurity, data, online, security, content, internet, library, service, imda, user, aircraft",0.48,TRUE
+6,Housing Policy,"flat, hdb, house, rental, property, bto, resale, rent, price, tenant, buyer, lease, market, land, buy",0.64,TRUE
+7,Animal Welfare,"animal, pet, cat, dog, nparks, ava, welfare, pwds, hiv, ofr, odp, cpfis, veterinarian, cruelty, owner",0.61,FALSE
+8,Family and Social Welfare,"cpf, child, parent, income, retirement, scheme, family, household, support, mother, save, marriage, age, assistance, account",0.33,TRUE
+9,Public Health,"care, health, mental, healthcare, service, family, patient, support, community, child, moh, senior, hospital, centre, nurse",0.48,TRUE
+10,Unidentified,"estimate, sum, withdraw, order, expenditure, main, part, head, cmd, development, shall, contain, supplementary, resolution, senior",0.35,FALSE
+11,Transport,"vehicle, bus, lta, road, transport, driver, car, taxi, park, traffic, commuter, safety, operator, fare, station",0.77,TRUE
+12,Art and Culture,"art, nac, artist, hp, debt, bankrupt, bankruptcy, dp, culture, av, creditor, cultural, audience, music, ed",0.61,TRUE
+13,Procedural,"no, tcm, answer, appendix, pob, shpl, postpone, reproduce, guillotine, time, paragraph, write, notify, pqs, oral",0.46,FALSE
+14,Urban Planning,"town, lift, hdb, council, block, contractor, flat, repair, hip, resident, lup, maintenance, upgrade, defect, project",0.42,TRUE
+15,Law and Justice,"mediation, dispute, dormitory, claim, tribunal, migrant, resolution, cdrt, court, case, claimant, party, pensioner, file, worker",0.41,TRUE
+16,Environment and Climate,"sport, waste, recycle, athlete, plastic, game, bag, food, national, facility, football, nsa, ewaste, disposable, sportsg",0.67,TRUE
+16,Sport,"sport, waste, recycle, athlete, plastic, game, bag, food, national, facility, football, nsa, ewaste, disposable, sportsg",0.67,TRUE
+17,Law and Justice,"gamble, member, inmate, prison, lpa, proceed, casino, moneylender, indicate, provision, exoffenders, move, put, donee, sps",0.58,TRUE
+18,Foreign policy,"asean, saf, defence, country, china, mindef, agreement, region, mfa, serviceman, cooperation, malaysia, military, myanmar, international",0.61,TRUE
+18,Military Defense and National Security,"asean, saf, defence, country, china, mindef, agreement, region, mfa, serviceman, cooperation, malaysia, military, myanmar, international",0.61,TRUE
+19,Urban Planning,"water, nparks, pub, dengue, tree, mosquito, park, wildlife, nea, food, bird, area, nature, ava, environmental",0.56,TRUE
+20,Economic Development and Trade,"company, sector, industry, smes, energy, business, economy, growth, technology, productivity, support, market, global, enterprise, cost",0.54,TRUE
+21,Procedural,"election, vote, president, elect, motion, immediately, put, pass, member, whole, candidate, cpib, third, commit, suspend",0.3,FALSE
+22,Labour,"worker, employer, job, employment, employee, mom, work, wage, workplace, tripartite, company, salary, workforce, career, hire",0.58,TRUE
+23,Unidentified,"nsc, limiter, plumber, escalator, bplrt, cdl, cubic, plumb, gombak, saturday, sleeper, reproductive, kilogrammes, sanitary, ps",0.57,FALSE
+24,Unidentified,"think, case, go, people, look, work, point, want, issue, give, ask, make, singaporean, could, come",0.8,FALSE
+25,Budget and Taxation,"tax, gst, loan, revenue, billion, income, reserve, borrower, rate, debt, nirc, borrow, budget, credit, ira",0.41,TRUE
