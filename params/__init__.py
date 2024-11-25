@@ -77,6 +77,11 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "token/gcp_token.json"
 # gpt key
 os.environ["OPENAI_API_KEY"] = open("token/gpt_api_token.txt", 'r').readlines()[0]
 
+# pinecone api key
+os.environ['PINECONE_API_KEY'] = open("token/pinecone_token.txt", 'r').readlines()[0]
+
 # table names
 dim_table_id = "singapore-parliament-speeches.prod_dim.dim_speech_summaries"
+dim_embeddings_table_id = "singapore-parliament-speeches.prod_dim.dim_speech_embeddings"
 summaries_table_id = "singapore-parliament-speeches.prod_mart.mart_speech_summaries"
+speeches_table_id = "singapore-parliament-speeches.prod_mart.mart_speeches"

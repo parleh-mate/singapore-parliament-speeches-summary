@@ -6,7 +6,8 @@ def get_in_progress_jobs(gbq_client, dim_table_id):
     job = gbq_client.query(f"""
                         SELECT *
                         FROM `{dim_table_id}`
-                            WHERE status = 'in_progress'
+                            order by batch_id desc
+                            limit 1
                         """)
 
     result = job.result()
@@ -57,7 +58,7 @@ def get_unsummarized_speeches(gbq_client, upper_bound, lower_bound, batch_size):
                         AND count_speeches_words<{upper_bound} 
                         AND count_speeches_words>{lower_bound}
                         AND member_name != ''
-                        AND member_name != 'Speaker'
+                        AND member_constituency is not NULL
                         LIMIT {batch_size}
                         """)
 
