@@ -7,3 +7,4 @@ pinecone==5.4.0
 PyMuPDF==1.25.0
 pymupdf4llm==0.0.17
 tiktoken==0.8.0
+google-cloud-storage==2.18.2
