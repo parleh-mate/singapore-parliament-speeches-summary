@@ -211,7 +211,7 @@ def handle_bill_summaries_creation(gbq_client, gpt_client):
     else:
         print("Tried to create jobs when previous one not completed.")     
 
-def check_bill_updates(gbq_client, index):
+def check_bill_updates(gbq_client, zilliz_client):
     print("checking for bill updates")
     index_df = get_dash_cached_datasets()['bill_summaries']
 
@@ -225,10 +225,16 @@ def check_bill_updates(gbq_client, index):
     bills_to_update = passed_bills[passed_bills.number.isin(unpassed_bills)]
     print(f"found {len(bills_to_update)} bills to update")
     if len(bills_to_update)>0:
-        # update pinecone index
-        for ind,row in bills_to_update.iterrows():
-            index.update(id = row.number,
-                        set_metadata = {"date_passed": row.date_passed.strftime('%Y-%m-%d')})
+        # update zilliz index
+        bills_to_update["date_passed"] = bills_to_update["date_passed"].dt.strftime("%Y-%m-%d")
+
+        for ind, row in bills_to_update.iterrows():
+            rag_entry = zilliz_client.query(collection_name="singapore_bill_summaries", filter=f'id == "{row.number}"', output_fields=["id", "vector", "namespace", "bill_impact", "bill_introduction", "bill_key_points", "date_introduced", "date_passed", "parliament", "pdf_link", "title"])[0]
+
+            rag_entry["date_passed"] = row.date_passed
+
+            zilliz_client.upsert(collection_name="singapore_bill_summaries",data=rag_entry)
+
         print(f"{len(bills_to_update)} bills updated.")
     else:
         print("No bills updated.")
