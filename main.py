@@ -1,8 +1,7 @@
 from openai import OpenAI
 from google.cloud import bigquery
-from params.api_keys import *
+#from params.api_keys import *
 import os
-import google.auth
 from pymilvus import MilvusClient
 
 from summarize_positions import handle_positions_extraction, handle_positions_creation
@@ -11,13 +10,7 @@ from summarize_bills import handle_bill_summaries_extraction, handle_bill_summar
 # initialize clients
 gpt_client = OpenAI()
 
-
-SCOPES = [
-    "https://www.googleapis.com/auth/cloud-platform",
-    "https://www.googleapis.com/auth/drive.readonly",
-]
-creds, project_id = google.auth.default(scopes=SCOPES)
-gbq_client = bigquery.Client(project=project_id, credentials=creds)
+gbq_client = bigquery.Client()
 
 zilliz_client = MilvusClient(
     uri=os.getenv("ZILLIZ_CLIENT_URI"),
