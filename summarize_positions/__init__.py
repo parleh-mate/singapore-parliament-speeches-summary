@@ -7,7 +7,7 @@ from extract import extract_policy_positions, retrieve_batch_meta, collect_speec
 
 from load import create_or_append_table, upload_embedding_meta_gbq
 
-from utils import change_to_completed, create_embeddings_job, upload_embeddings_batch_job, upsert_pinecone, extract_finished_embeddings, prepare_speech_data_upsert, delete_in_progress, create_json_batch_file, upload_batch_to_gpt
+from utils import change_to_completed, create_embeddings_job, upload_embeddings_batch_job, extract_finished_embeddings, prepare_speech_data_upsert, delete_in_progress, create_json_batch_file, upload_batch_to_gpt
 
 from params import topics_list, speech_embeddings_job_description, word_upper_bound, word_lower_bound, speech_batch_size, positions_model, local_positions_batch_directory, gbq_positions_schema
 
@@ -23,7 +23,7 @@ def handle_finished_positions(batch_meta, batch_id, gpt_batch_id, gpt_client, gb
     change_to_completed(gbq_client, dim_positions_table_id)
     return speech_positions
 
-def handle_positions_embeddings(speech_positions, gbq_client, gpt_client, index):
+def handle_positions_embeddings(speech_positions, gbq_client, gpt_client, zilliz_client):
     # now create embeddings job
     positions = speech_positions.policy_positions
     speech_ids = speech_positions.speech_id
@@ -43,10 +43,16 @@ def handle_positions_embeddings(speech_positions, gbq_client, gpt_client, index)
     speech_meta_df = collect_speech_meta(gbq_client, speech_ids)
     vectors_list = prepare_speech_data_upsert(speech_meta_df, speech_positions, embed_dict)
     # Upsert to pinecone in batches of 100
-    upsert_pinecone(vectors_list, index, 100)
+    # upsert to zilliz
+    for vector in vectors_list:
+            # add empty namespace
+            vector = vector | {'namespace': ''}
+            # now upsert
+            zilliz_client.upsert(collection_name="singapore_speeches_positions", data=vector)
+
     upload_embedding_meta_gbq(gbq_client, dim_positions_embeddings_table_id, batch_meta.id, "speech_ids", speech_ids)
 
-def handle_positions_extraction(gbq_client, gpt_client, index):
+def handle_positions_extraction(gbq_client, gpt_client, zilliz_client):
     last_job_meta = get_last_job_meta(gbq_client, dim_positions_table_id)
     # only continue if a job was scheduled
     if (last_job_meta['batch_status']=='in_progress'):
@@ -55,11 +61,11 @@ def handle_positions_extraction(gbq_client, gpt_client, index):
         if batch_meta.status=="completed":
             speech_positions = handle_finished_positions(batch_meta, last_job_meta['batch_id'], last_job_meta['gpt_batch_id'], gpt_client, gbq_client)
             if len(speech_positions)!=0:
-                handle_positions_embeddings(speech_positions, gbq_client, gpt_client, index)
+                handle_positions_embeddings(speech_positions, gbq_client, gpt_client, zilliz_client)
                 print(f"{len(speech_positions)} speech positions embedded from scheduled batch size of {batch_meta.request_counts.completed}")
             else:
                 print(f"No speech positions to embed from scheduled batch size of {batch_meta.request_counts.completed}")
-        elif batch_meta.status=="failed":
+        elif batch_meta.status in ["failed", "expired"]:
             # if batch fails, delete in GBQ
             delete_in_progress(gbq_client, dim_positions_table_id)
         else:
