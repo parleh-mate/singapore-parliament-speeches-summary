@@ -129,15 +129,15 @@ def prepare_speech_data_upsert(speech_meta_df, positions, embed_dict):
         meta_df = upsert_df.query(f"speech_id=='{speech_id}'")
         
         vector = {"id": speech_id, 
-                "values": embeddings,
-                "metadata": {"date": meta_df['date'].iloc[0],
-                                "parliament": meta_df['parliament'].iloc[0],
-                                "name": meta_df['member_name'].iloc[0],
-                                "party": meta_df['member_party'].iloc[0],
-                                "constituency": meta_df['member_constituency'].iloc[0],
-                                "policy_positions": meta_df['policy_positions'].iloc[0],
-                                "topic_assigned": meta_df['topic_assigned'].iloc[0]
-                                }}
+                  "vector": embeddings,
+                  "date": meta_df['date'].iloc[0],
+                  "parliament": meta_df['parliament'].iloc[0],
+                  "name": meta_df['member_name'].iloc[0],
+                  "party": meta_df['member_party'].iloc[0],
+                  "constituency": meta_df['member_constituency'].iloc[0],
+                  "policy_positions": meta_df['policy_positions'].iloc[0],
+                  "topic_assigned": meta_df['topic_assigned'].iloc[0]
+                  }
             
         vectors_list.append(vector)
 
@@ -169,17 +169,16 @@ def prepare_bill_data_upsert(bill_meta_df, bill_summaries, embed_dict):
         meta_df = upsert_df.query(f"bill_number=='{bill_number}'")
         
         vector = {"id": bill_number, 
-                "values": embeddings,
-                "metadata": {
-                    "title": meta_df['title'].iloc[0],
-                    "pdf_link": meta_df['pdf_link'].iloc[0],
-                    "date_introduced": meta_df['date_introduced'].iloc[0],
-                    "date_passed": meta_df['date_passed'].iloc[0],
-                    "parliament": meta_df['parliament'].iloc[0],
-                    "bill_introduction": meta_df['bill_introduction'].iloc[0],
-                    "bill_key_points": meta_df['bill_key_points'].iloc[0],
-                    "bill_impact": meta_df['bill_impact'].iloc[0]
-                    }}
+                "vector": embeddings,
+                "title": meta_df['title'].iloc[0],
+                "pdf_link": meta_df['pdf_link'].iloc[0],
+                "date_introduced": meta_df['date_introduced'].iloc[0],
+                "date_passed": meta_df['date_passed'].iloc[0],
+                "parliament": meta_df['parliament'].iloc[0],
+                "bill_introduction": meta_df['bill_introduction'].iloc[0],
+                "bill_key_points": meta_df['bill_key_points'].iloc[0],
+                "bill_impact": meta_df['bill_impact'].iloc[0]
+                }
             
         vectors_list.append(vector)
 
