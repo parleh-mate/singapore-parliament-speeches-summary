@@ -194,7 +194,7 @@ def collect_bill_meta(gbq_client, bill_numbers):
     job = gbq_client.query(f"""
                     SELECT number as bill_number, title, pdf_link, date(date_introduced) as date_introduced, date(date_passed) as date_passed, parliament
                     FROM `{bills_table_id}` bills
-                    left join `singapore-parliament-speeches.google_sheets.parliament_dates` dates
+                    left join `singapore-parliament-speeches.prod_stg.stg_gsheet_parliament_dates` dates
                     on date(bills.date_introduced) BETWEEN dates.from_date and dates.to_date
                     WHERE number IN ({','.join([f"'{i}'" for i in bill_numbers])}
                     )

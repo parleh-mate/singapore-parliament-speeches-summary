@@ -8,7 +8,7 @@ from extract import extract_bill_summaries, extract_long_bill_summaries, get_uns
 
 from load import create_or_append_table, upload_embedding_meta_gbq
 
-from utils import change_to_completed, create_embeddings_job, upload_embeddings_batch_job, upsert_pinecone, extract_finished_embeddings, prepare_bill_data_upsert, delete_in_progress, create_json_batch_file, upload_batch_to_gpt, download_and_extract_bill_pdf, count_bill_tokens, split_bills_df_to_parts
+from utils import change_to_completed, create_embeddings_job, upload_embeddings_batch_job, extract_finished_embeddings, prepare_bill_data_upsert, delete_in_progress, create_json_batch_file, upload_batch_to_gpt, download_and_extract_bill_pdf, count_bill_tokens, split_bills_df_to_parts
 
 from params import bills_batch_size, bills_model, local_bills_split_batch_directory, local_bills_batch_directory, gbq_bill_summaries_schema, gbq_bill_split_summaries_schema, bill_embeddings_job_description
 
@@ -62,7 +62,7 @@ def extract_finished_long_bills(gpt_client, gbq_client):
     bill_split_summaries = bill_split_summaries.groupby('bill_number').head(1).drop(columns = ['bill_split'])
     return bill_split_summaries
 
-def handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, index):
+def handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, zilliz_client):
     # now create embeddings job
     bill_summaries_combined = bill_summaries.apply(lambda x: "introduction: " + x.bill_introduction + "key_points: " + x.bill_key_points + "impact: " + x.bill_impact, axis = 1)
     bill_summaries_combined.name = 'bill_summary'
@@ -82,11 +82,16 @@ def handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, ind
     embed_dict = extract_finished_embeddings(gpt_client, batch_meta)
     bill_meta_df = collect_bill_meta(gbq_client, bill_numbers)
     vectors_list = prepare_bill_data_upsert(bill_meta_df, bill_summaries, embed_dict)
-    # Upsert to pinecone in batches of 1
-    upsert_pinecone(vectors_list, index, 1)
+    # upsert to zilliz
+    for vector in vectors_list:
+            # add empty namespace
+            vector = vector | {'namespace': ''}
+            # now upsert
+            zilliz_client.upsert(collection_name="singapore_bill_summaries",data=vector)
+
     upload_embedding_meta_gbq(gbq_client, dim_bill_embeddings_table_id, batch_meta.id, "bill_number", bill_numbers)
 
-def handle_bill_summaries_extraction(gbq_client, gpt_client, index):
+def handle_bill_summaries_extraction(gbq_client, gpt_client, zilliz_client):
     last_job_meta = get_last_job_meta(gbq_client, dim_bill_summaries_table_id)
     # only continue if a job was scheduled
     if (last_job_meta['batch_status']=='in_progress'):
@@ -98,7 +103,7 @@ def handle_bill_summaries_extraction(gbq_client, gpt_client, index):
 
             if len(bill_summaries!=0):
                 print("embedding bill summaries")
-                handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, index)
+                handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, zilliz_client)
                 # only upload to gbq and mark job as completed if embeddings successful, otherwise script exits
                 # upload to GBQ
                 create_or_append_table(bill_summaries, bill_summaries_table_id, gbq_client)
@@ -211,7 +216,7 @@ def handle_bill_summaries_creation(gbq_client, gpt_client):
     else:
         print("Tried to create jobs when previous one not completed.")     
 
-def check_bill_updates(gbq_client, index):
+def check_bill_updates(gbq_client, zilliz_client):
     print("checking for bill updates")
     index_df = get_dash_cached_datasets()['bill_summaries']
 
@@ -225,10 +230,16 @@ def check_bill_updates(gbq_client, index):
     bills_to_update = passed_bills[passed_bills.number.isin(unpassed_bills)]
     print(f"found {len(bills_to_update)} bills to update")
     if len(bills_to_update)>0:
-        # update pinecone index
-        for ind,row in bills_to_update.iterrows():
-            index.update(id = row.number,
-                        set_metadata = {"date_passed": row.date_passed.strftime('%Y-%m-%d')})
+        # update zilliz index
+        bills_to_update["date_passed"] = bills_to_update["date_passed"].dt.strftime("%Y-%m-%d")
+
+        for ind, row in bills_to_update.iterrows():
+            rag_entry = zilliz_client.query(collection_name="singapore_bill_summaries", filter=f'id == "{row.number}"', output_fields=["id", "vector", "namespace", "bill_impact", "bill_introduction", "bill_key_points", "date_introduced", "date_passed", "parliament", "pdf_link", "title"])[0]
+
+            rag_entry["date_passed"] = row.date_passed
+
+            zilliz_client.upsert(collection_name="singapore_bill_summaries",data=rag_entry)
+
         print(f"{len(bills_to_update)} bills updated.")
     else:
         print("No bills updated.")
