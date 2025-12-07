@@ -8,7 +8,7 @@ from extract import extract_bill_summaries, extract_long_bill_summaries, get_uns
 
 from load import create_or_append_table, upload_embedding_meta_gbq
 
-from utils import change_to_completed, create_embeddings_job, upload_embeddings_batch_job, upsert_pinecone, extract_finished_embeddings, prepare_bill_data_upsert, delete_in_progress, create_json_batch_file, upload_batch_to_gpt, download_and_extract_bill_pdf, count_bill_tokens, split_bills_df_to_parts
+from utils import change_to_completed, create_embeddings_job, upload_embeddings_batch_job, extract_finished_embeddings, prepare_bill_data_upsert, delete_in_progress, create_json_batch_file, upload_batch_to_gpt, download_and_extract_bill_pdf, count_bill_tokens, split_bills_df_to_parts
 
 from params import bills_batch_size, bills_model, local_bills_split_batch_directory, local_bills_batch_directory, gbq_bill_summaries_schema, gbq_bill_split_summaries_schema, bill_embeddings_job_description
 
@@ -62,7 +62,7 @@ def extract_finished_long_bills(gpt_client, gbq_client):
     bill_split_summaries = bill_split_summaries.groupby('bill_number').head(1).drop(columns = ['bill_split'])
     return bill_split_summaries
 
-def handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, index):
+def handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, zilliz_client):
     # now create embeddings job
     bill_summaries_combined = bill_summaries.apply(lambda x: "introduction: " + x.bill_introduction + "key_points: " + x.bill_key_points + "impact: " + x.bill_impact, axis = 1)
     bill_summaries_combined.name = 'bill_summary'
@@ -82,11 +82,16 @@ def handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, ind
     embed_dict = extract_finished_embeddings(gpt_client, batch_meta)
     bill_meta_df = collect_bill_meta(gbq_client, bill_numbers)
     vectors_list = prepare_bill_data_upsert(bill_meta_df, bill_summaries, embed_dict)
-    # Upsert to pinecone in batches of 1
-    upsert_pinecone(vectors_list, index, 1)
+    # upsert to zilliz
+    for vector in vectors_list:
+            # add empty namespace
+            vector = vector | {'namespace': ''}
+            # now upsert
+            zilliz_client.upsert(collection_name="singapore_bill_summaries",data=vector)
+
     upload_embedding_meta_gbq(gbq_client, dim_bill_embeddings_table_id, batch_meta.id, "bill_number", bill_numbers)
 
-def handle_bill_summaries_extraction(gbq_client, gpt_client, index):
+def handle_bill_summaries_extraction(gbq_client, gpt_client, zilliz_client):
     last_job_meta = get_last_job_meta(gbq_client, dim_bill_summaries_table_id)
     # only continue if a job was scheduled
     if (last_job_meta['batch_status']=='in_progress'):
@@ -98,7 +103,7 @@ def handle_bill_summaries_extraction(gbq_client, gpt_client, index):
 
             if len(bill_summaries!=0):
                 print("embedding bill summaries")
-                handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, index)
+                handle_bill_summaries_embeddings(bill_summaries, gbq_client, gpt_client, zilliz_client)
                 # only upload to gbq and mark job as completed if embeddings successful, otherwise script exits
                 # upload to GBQ
                 create_or_append_table(bill_summaries, bill_summaries_table_id, gbq_client)
