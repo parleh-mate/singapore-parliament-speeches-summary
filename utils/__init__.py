@@ -184,15 +184,6 @@ def prepare_bill_data_upsert(bill_meta_df, bill_summaries, embed_dict):
 
     return vectors_list
 
-def upsert_pinecone(vectors_list, index, batch_size):
-    upserted = 0
-    while upserted!=len(vectors_list):
-        upsert_batch = vectors_list[upserted:upserted+batch_size]
-        index.upsert(
-            vectors = upsert_batch
-        )
-        upserted += len(upsert_batch)
-
 def download_and_extract_bill_pdf(bill_link, pages = None):
     response = requests.get(bill_link, stream=True)
     with open(bill_pdf_directory, 'wb') as file:
